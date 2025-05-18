@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>$CAPTCHA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden; /* Disable scrolling */
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #00ff88;
+      text-align: center;
+    }
+
+    header {
+      padding: 60px 20px 20px;
+      backdrop-filter: blur(3px);
+      position: relative;
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: #00ff88;
+      text-shadow: 0 0 10px #00ff88;
+    }
+
+    p.subtitle {
+      font-size: 1.2rem;
+      color: #00ffcc;
+      margin-top: 10px;
+    }
+
+    .buy-button {
+      display: block;
+      margin: 30px auto 20px;
+      background-color: #00ff88;
+      color: #000;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 15px #00ff88, 0 0 25px #00ff88 inset;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      animation: pulse 2s infinite;
+    }
+
+    .buy-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px #00ffaa, 0 0 30px #00ffaa inset;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88 inset; }
+      50% { box-shadow: 0 0 20px #00ffaa, 0 0 30px #00ffaa inset; }
+      100% { box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88 inset; }
+    }
+
+    #bot {
+      display: none;
+      position: absolute;
+      width: 80px;
+      cursor: pointer;
+      z-index: 20;
+      filter: drop-shadow(0 0 10px #00ff88);
+      animation: float 2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0); }
+    }
+
+    .explosion {
+      position: absolute;
+      width: 100px;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    #game-container {
+      margin-top: 20px;
+    }
+
+    #game-instructions {
+      font-size: 1.1rem;
+      color: #00ffcc;
+    }
+
+    #score {
+      font-weight: bold;
+      color: #00ff88;
+      text-shadow: 0 0 6px #00ff88;
+      margin-top: 10px;
+    }
+
+    label {
+      font-size: 0.9rem;
+      margin-top: 10px;
+      color: #00ff88;
+      display: block;
+    }
+
+    .yeah-coin {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      z-index: 5;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>$CAPTCHA</h1>
+    <p class="subtitle">Because even bots need to prove they're human.</p>
+    <button onclick="startGame()" class="buy-button">Start Game</button>
+  </header>
+
+  <div id="game-container">
+    <h2>🕹 Click the Bot!</h2>
+    <p id="game-instructions">Prove you're not a bot. Click as many bots as you can!</p>
+    <div id="score">Score: 0</div>
+    <label>
+      <input type="checkbox" id="soundToggle" checked /> 🔊 Sound Effects On
+    </label>
+    <label>
+      <input type="checkbox" id="musicToggle" checked /> 🎵 Music On
+    </label>
+  </div>
+
+  <img id="bot" src="BOT.png" alt="Bot" onclick="hitBot(event)" />
+  <audio id="hitSound" src="robot-hit.mp3" preload="auto"></audio>
+  <audio id="bgMusic" src="music.mp3" preload="auto" loop></audio>
+
+ <script>
+  let score = 0;
+  let gameInterval;
+  const bot = document.getElementById('bot');
+  const scoreDisplay = document.getElementById('score');
+  const hitSound = document.getElementById('hitSound');
+  const soundToggle = document.getElementById('soundToggle');
+  const bgMusic = document.getElementById('bgMusic');
+  const musicToggle = document.getElementById('musicToggle');
+
+  // Try to play music on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    playMusic();
+  });
+
+  // Fallback for autoplay restrictions: try again after any click
+  document.body.addEventListener('click', playMusic, { once: true });
+
+  function playMusic() {
+    bgMusic.play().catch(() => {
+      // Ignored — browser may block autoplay without interaction
+    });
+  }
+
+  musicToggle.addEventListener('change', () => {
+    if (musicToggle.checked) {
+      bgMusic.play();
+    } else {
+      bgMusic.pause();
+    }
+  });
+
+  function startGame() {
+    score = 0;
+    scoreDisplay.textContent = "Score: 0";
+    moveBot();
+    gameInterval = setInterval(moveBot, 1000);
+    setTimeout(() => {
+      clearInterval(gameInterval);
+      bot.style.display = 'none';
+      alert(`Game Over! You scored ${score} points.`);
+    }, 30000);
+  }
+
+  function moveBot() {
+    const x = Math.random() * (window.innerWidth - 100);
+    const y = Math.random() * (window.innerHeight - 100);
+    bot.style.left = `${x}px`;
+    bot.style.top = `${y}px`;
+    bot.style.display = 'block';
+  }
+
+  function hitBot(event) {
+    score++;
+    scoreDisplay.textContent = `Score: ${score}`;
+    bot.style.display = 'none';
+
+    if (soundToggle.checked) {
+      hitSound.currentTime = 0;
+      hitSound.play();
+    }
+
+    const explosion = document.createElement('img');
+    
+    explosion.className = 'explosion';
+    explosion.style.left = `${event.clientX - 50}px`;
+    explosion.style.top = `${event.clientY - 50}px`;
+    document.body.appendChild(explosion);
+
+    setTimeout(() => explosion.remove(), 500);
+  }
+
+  // Add 80 YEAH.png coins randomly across the screen
+  for (let i = 0; i < 80; i++) {
+    const coin = document.createElement('img');
+    coin.src = 'YEAH.png';
+    coin.className = 'yeah-coin';
+    coin.style.left = `${Math.random() * 100}vw`;
+    coin.style.top = `${Math.random() * 100}vh`;
+    document.body.appendChild(coin);
+  }
+</script>
+
+
+</body>
+</html>
